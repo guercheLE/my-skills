@@ -19,8 +19,8 @@ description: >
 
 ## Non-negotiable rules
 
-- `.pen` files are **JSON-based** and readable with regular filesystem tools. However, always use Pencil MCP tools (`batch_get`, `batch_design`, etc.) for design operations — they handle IDs correctly, apply layout calculations, and prevent format-breaking manual edits.
-- Never hand-edit a `.pen` file directly. Even though the format is JSON, manual edits can easily break internal references, component linkages, or variable bindings.
+- `.pen` files are **JSON-based**, human-readable, and Git-diffable. You _can_ read them with standard filesystem tools, but **always use Pencil MCP tools** (`batch_get`, `batch_design`, etc.) for design operations — they handle IDs correctly, apply layout calculations, and prevent format-breaking manual edits.
+- Avoid hand-editing a `.pen` file directly. Manual edits can break internal references, component linkages, or variable bindings — even though the format is plain JSON.
 - When in doubt about a node's ID or structure, **look it up** — never guess node IDs.
 
 ---
@@ -149,7 +149,7 @@ Always confirm node IDs via `batch_get` before exporting — exporting the wrong
 
 ## Supported AI assistants
 
-Pencil works with multiple AI tools through MCP:
+Pencil works with multiple AI tools through MCP. Not all tools support every feature — see [references/setup-troubleshooting.md](references/setup-troubleshooting.md) for installation and connection details.
 
 - **Claude Code** (CLI and IDE)
 - **Claude Desktop**
