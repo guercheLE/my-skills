@@ -7,15 +7,15 @@ description: >
   section", "update the layout", "open Pencil", or mention a .pen file. Also use it for tasks like applying a
   style guide, changing colors/fonts globally, exporting assets, or exploring what's already in a design.
   This skill is essential any time the Pencil MCP server is involved — invoke it proactively for ALL design
-  tasks, including those that seem simple, to avoid mistakes with the encrypted file format and operation syntax.
+  tasks, including those that seem simple, to avoid mistakes with node IDs and operation syntax.
 ---
 
 # Working with the Pencil MCP Server
 
 ## Non-negotiable rules
 
-- `.pen` files are **encrypted**. Never use `read_file`, `grep_search`, or any filesystem tool to read them. The content will be unreadable garbage and you'll miss structure entirely.
-- All reads and writes to `.pen` files **must** go through the Pencil MCP tools (`batch_get`, `batch_design`, etc.).
+- `.pen` files are **JSON-based** and readable with regular filesystem tools. However, always use Pencil MCP tools (`batch_get`, `batch_design`, etc.) for design operations — they handle IDs correctly, apply layout calculations, and prevent format-breaking manual edits.
+- Never hand-edit a `.pen` file directly. Even though the format is JSON, manual edits can easily break internal references, component linkages, or variable bindings.
 - When in doubt about a node's ID or structure, **look it up** — never guess node IDs.
 
 ---
@@ -210,3 +210,12 @@ Always confirm node IDs via `batch_get` before exporting — exporting the wrong
 | Find all property values | `search_all_unique_properties` |
 | Bulk property replacement | `replace_all_matching_properties` |
 | Export to image/pdf | `export_nodes` |
+
+---
+
+## Reference files
+
+| Topic | File |
+|-------|------|
+| .pen file format & TypeScript schema | [references/pen-format.md](references/pen-format.md) |
+| Installation, authentication & troubleshooting | [references/setup-troubleshooting.md](references/setup-troubleshooting.md) |
