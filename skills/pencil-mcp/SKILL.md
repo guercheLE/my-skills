@@ -1,21 +1,26 @@
 ---
 name: pencil-mcp
 description: >
-  Expert guide for creating, editing, and validating UI designs in .pen files using the Pencil MCP server.
+  Expert guide for creating, editing, and validating UI designs in .pen files using the Pencil MCP server,
+  AND for translating those designs into production-ready code for any platform.
   Use this skill whenever the user wants to design screens, mockups, dashboards, landing pages, mobile apps,
   components, or any visual layout in Pencil — even if they just say "design this", "make a mockup", "add a
   section", "update the layout", "open Pencil", or mention a .pen file. Also use it for tasks like applying a
   style guide, changing colors/fonts globally, exporting assets, or exploring what's already in a design.
+  Additionally, use this skill whenever the user says "turn this design into code", "generate code from Pencil",
+  "implement this screen", "convert to React/SwiftUI/Compose/XAML", mentions exporting a .pen file to any
+  programming language, or asks to code up a UI from a Pencil design — even casually like "can you code this
+  up?" or "make this work in Android".
   This skill is essential any time the Pencil MCP server is involved — invoke it proactively for ALL design
-  tasks, including those that seem simple, to avoid mistakes with the encrypted file format and operation syntax.
+  and design-to-code tasks, including those that seem simple, to avoid mistakes with node IDs and operation syntax.
 ---
 
 # Working with the Pencil MCP Server
 
 ## Non-negotiable rules
 
-- `.pen` files are **encrypted**. Never use `read_file`, `grep_search`, or any filesystem tool to read them. The content will be unreadable garbage and you'll miss structure entirely.
-- All reads and writes to `.pen` files **must** go through the Pencil MCP tools (`batch_get`, `batch_design`, etc.).
+- `.pen` files are **JSON-based**, human-readable, and Git-diffable. You _can_ read them with standard filesystem tools, but **always use Pencil MCP tools** (`batch_get`, `batch_design`, etc.) for design operations — they handle IDs correctly, apply layout calculations, and prevent format-breaking manual edits.
+- Avoid hand-editing a `.pen` file directly. Manual edits can break internal references, component linkages, or variable bindings — even though the format is plain JSON.
 - When in doubt about a node's ID or structure, **look it up** — never guess node IDs.
 
 ---
@@ -142,6 +147,87 @@ Always confirm node IDs via `batch_get` before exporting — exporting the wrong
 
 ---
 
+## Supported AI assistants
+
+Pencil works with multiple AI tools through MCP. Not all tools support every feature — see [references/setup-troubleshooting.md](references/setup-troubleshooting.md) for installation and connection details.
+
+- **Claude Code** (CLI and IDE)
+- **Claude Desktop**
+- **Cursor** (AI-powered IDE)
+- **Windsurf IDE** (Codeium)
+- **Codex CLI** (OpenAI)
+- **Antigravity IDE**
+- **OpenCode CLI**
+
+The MCP server runs **locally** — no cloud dependency for design operations. AI assistants connect via MCP when Pencil is running. View available tools in your IDE's MCP settings.
+
+---
+
+## Components and instances
+
+Any element can become a reusable component:
+
+1. Select the element on the canvas
+2. Press **`Cmd/Ctrl + Option/Alt + K`** (or click "Create component" in the properties panel)
+3. The element becomes the **component origin**, shown with a **magenta** bounding box
+
+To create an **instance**, copy the component origin on the canvas. Instances show a **violet** bounding box. Click "Go to component" in the properties panel to navigate back to the origin.
+
+To **detach** an instance (break the link to its origin): **`Cmd/Ctrl + Option/Alt + X`**.
+
+Via MCP, components are objects with `reusable: true` and instances use `type: "ref"`. See [references/pen-format.md](references/pen-format.md) for the full component/instance/override model.
+
+---
+
+## Slots
+
+Slots are designated areas within a component where elements can be dropped in.
+
+**Creating a slot (UI):**
+1. Create a frame inside a component origin
+2. Keep the frame empty
+3. Click "Make a slot" in the properties panel
+
+Slots appear with diagonal lines on the canvas. You can mark other components as "suggested slot components" — for example, a `table` component's slot can suggest `table-row` as content. This guides both human and AI designers.
+
+Via MCP, slots are defined with the `slot` property on a frame (an array of suggested component IDs). See [references/pen-format.md](references/pen-format.md).
+
+---
+
+## Design libraries
+
+Design libraries are collections of reusable components that can be shared across `.pen` files.
+
+**Creating a library:**
+1. Create a `.pen` file and populate it with components
+2. In the layers panel, click the "Libraries" icon
+3. Click "Turn this file into a library" — the file becomes `.lib.pen`
+
+> Once a file is marked as a library, this **cannot be undone**.
+
+**Using a library:**
+1. In the layers panel → Libraries icon → select the library to import
+2. In the layers panel → Assets icon → drag and drop components onto the canvas
+
+Changes to components in a library file propagate to every file that uses them.
+
+---
+
+## Importing from Figma
+
+Pencil can import Figma designs:
+
+- **Complete .fig files:** Toolbar → click chevron below Rectangle icon → "Import Figma" (or File → Import Image/SVG/Figma in the desktop app)
+- **Individual layers:** Copy elements in Figma, paste onto the Pencil canvas
+
+> **Note:** Copying and pasting *image* elements from Figma is not supported. Import the complete file or add images manually.
+
+**Image import:** Drag-and-drop, copy-paste, or toolbar/file menu. Supported formats: PNG, JPEG, SVG.
+
+**Built-in icon libraries:** Material Symbols (Outlined, Rounded, Sharp), Lucide Icons, Feather, Phosphor. Custom SVG icons can be imported the same way as images.
+
+---
+
 ## Design quality principles
 
 - **Use the style guide.** Don't hardcode colors or fonts unless the user explicitly provides them. Load a style guide that matches the context (landing-page, mobile-app, etc.) and use its tokens.
@@ -210,3 +296,167 @@ Always confirm node IDs via `batch_get` before exporting — exporting the wrong
 | Find all property values | `search_all_unique_properties` |
 | Bulk property replacement | `replace_all_matching_properties` |
 | Export to image/pdf | `export_nodes` |
+
+---
+
+## Reference files
+
+| Topic | File |
+|-------|------|
+| .pen file format & TypeScript schema | [references/pen-format.md](references/pen-format.md) |
+| Installation, authentication & troubleshooting | [references/setup-troubleshooting.md](references/setup-troubleshooting.md) |
+| Keyboard shortcuts | [references/keyboard-shortcuts.md](references/keyboard-shortcuts.md) |
+| Design → Code: Web (React, Tailwind, Vue, Angular, HTML/CSS) | [references/web.md](references/web.md) |
+| Design → Code: Android (Jetpack Compose, XML) | [references/android.md](references/android.md) |
+| Design → Code: iOS / macOS (SwiftUI, UIKit, AppKit) | [references/ios-macos.md](references/ios-macos.md) |
+| Design → Code: Windows (WinUI 3, WPF, MAUI, XAML) | [references/windows.md](references/windows.md) |
+| Design → Code: Linux (GTK 4, Qt, QML) | [references/linux.md](references/linux.md) |
+
+---
+
+## Design → Code
+
+Pencil designs can be translated into production-ready code for all major platforms:
+
+| Platform | Framework | Pencil support |
+|----------|-----------|----------------|
+| Web | React + Tailwind | ✅ Native guidelines (`get_guidelines("code")` + `get_guidelines("tailwind")`) |
+| Web | Vue, Angular, Svelte, vanilla HTML/CSS/JS | ✅ Via design extraction |
+| Android | Jetpack Compose, XML layouts | ✅ Via design extraction |
+| iOS | SwiftUI, UIKit | ✅ Via design extraction |
+| macOS | SwiftUI, AppKit | ✅ Via design extraction |
+| Windows | WPF, WinUI 3, XAML | ✅ Via design extraction |
+| Linux | GTK 4, Qt/QML | ✅ Via design extraction |
+
+### Extraction workflow
+
+Run this for every platform before writing any code.
+
+**Step 1 — Understand the design**
+
+```
+get_editor_state()                        # confirm which .pen file is open
+batch_get(["*"], [])                      # discover all nodes; note IDs
+snapshot_layout()                         # get x, y, width, height for every node
+get_variables()                           # read colors, spacing, typography tokens
+get_screenshot(rootNodeId)                # visual reference
+```
+
+**Step 2 — Extract component details**
+
+For each component you need to implement:
+
+```
+batch_get([], ["nodeId"], { maxDepth: 10, includePathGeometry: true })
+```
+
+Key properties to record:
+- `type` — frame, text, image, shape, component_ref, etc.
+- `fill`, `stroke`, `cornerRadius`, `opacity` — appearance
+- `fontFamily`, `fontSize`, `fontWeight`, `textAlign`, `lineHeight` — typography
+- `layoutMode` (horizontal/vertical), `padding*`, `itemSpacing` — layout
+- `width`, `height`, `x`, `y` (from `snapshot_layout`) — size & position
+- `sizing` (`fill_container` / `fit_content` / fixed) — how to size the node
+- `children` — nested structure
+- `geometry` — SVG paths (icons, logos)
+
+**Step 3 — Map to platform concepts**
+
+Load the reference file that matches the target platform **before writing any code**:
+
+| Target | File to read |
+|--------|-------------|
+| React / Tailwind (preferred web) | [references/web.md](references/web.md) |
+| Vue / Angular / HTML+CSS+JS | [references/web.md](references/web.md) |
+| Android (Jetpack Compose or XML) | [references/android.md](references/android.md) |
+| iOS / macOS (SwiftUI or UIKit/AppKit) | [references/ios-macos.md](references/ios-macos.md) |
+| Windows (WPF / WinUI 3 / XAML) | [references/windows.md](references/windows.md) |
+| Linux (GTK 4 / Qt / QML) | [references/linux.md](references/linux.md) |
+
+If the user hasn't specified a platform, ask. If the target codebase already exists, inspect it first to detect the framework in use — always match the project's existing stack.
+
+**Step 4 — Validate**
+
+After generating code, call `get_screenshot` on the relevant node and compare visually. Any obvious mismatches in color, spacing, or layout need fixing before hand-off.
+
+### Design-to-code principles
+
+- **Match the project.** If a codebase already exists, explore it to find the framework, styling approach, existing components, and conventions. Update existing components instead of creating duplicates.
+- **Use design tokens, not hardcoded values.** Read `get_variables()` and map token names to the project's theming system.
+- **Preserve content exactly.** Use the same text labels, icon names, and spacing as in the design.
+- **No documentation files.** After generating code, do not create Markdown changelogs or README updates unless the user explicitly asks.
+- **Validate visually.** Use `get_screenshot` to compare design vs. implementation and iterate until they match.
+
+---
+
+## Code → Design
+
+Pencil supports importing existing code into designs. The AI agent can read your source files and recreate them visually in a `.pen` file.
+
+**Requirements:**
+- Keep the `.pen` file in the **same workspace** as your code so the AI agent can access both
+- Have Pencil and the AI assistant running
+
+**Workflow:**
+1. Open your `.pen` file
+2. Open AI chat (`Cmd/Ctrl + K`)
+3. Ask to import code:
+
+```
+Recreate the Button component from src/components/Button.tsx
+Import the LoginForm from my codebase into this design
+Add the Header component from src/layouts/Header.tsx
+```
+
+**What gets imported:** component structure/hierarchy, layout/positioning, styling (colors, typography, spacing).
+
+---
+
+## Two-way sync
+
+The most powerful workflow combines Design → Code and Code → Design:
+
+1. **Start with code** — Import existing components into Pencil
+2. **Design improvements** — Make visual changes in Pencil
+3. **Update code** — Ask AI to apply changes back to code
+4. **Iterate** — Repeat as needed
+
+### CSS variables ↔ Pencil variables
+
+Create a synchronized design token system:
+
+**Import CSS to Pencil:**
+```
+Create Pencil variables from my globals.css
+Import design tokens from src/styles/tokens.css
+```
+
+**Export Pencil to CSS:**
+```
+Update globals.css with these Pencil variables
+Sync these design tokens to my CSS
+```
+
+### Recommended workflows
+
+**Start new features:**
+1. Design in Pencil first → generate initial code → refine implementation → update design if needed
+
+**Update existing features:**
+1. Import component into Pencil → make design changes → sync changes back to code
+
+**Design system maintenance:**
+1. Define variables in Pencil → sync to CSS → use variables in both design and code → update once, apply everywhere
+
+### File organization
+
+Keep `.pen` files alongside code so the AI agent can see both:
+
+```
+my-project/
+├── src/
+│   ├── components/
+│   └── styles/
+├── design.pen      ← Design file in the same repo
+└── package.json
+```
