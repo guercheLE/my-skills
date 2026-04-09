@@ -1,0 +1,23 @@
+{
+    "name": "@ui2design/token-miner",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "mine": "npx ts-node scripts/mine.ts"
+    },
+    "dependencies": {
+        "fast-glob": "^3.3.2",
+        "postcss": "^8.4.38",
+        "postcss-values-parser": "^6.0.2"
+    },
+    "devDependencies": {
+        "@types/node": "^20.12.7",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.4.5"
+    },
+    "ts-node": {
+        "esm": true,
+        "experimentalSpecifierResolution": "node"
+    }
+}
