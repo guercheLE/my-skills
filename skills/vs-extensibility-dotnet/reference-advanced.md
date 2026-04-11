@@ -110,6 +110,8 @@ await project.AddFileAsync(filePath, ct);
 
 ## Settings
 
+> **Preview API** — Requires `#pragma warning disable VSEXTPREVIEW_SETTINGS` or `<NoWarn>$(NoWarn);VSEXTPREVIEW_SETTINGS</NoWarn>` in csproj.
+
 ### Define Settings
 
 ```csharp
@@ -122,17 +124,47 @@ internal static Setting.Boolean EnableFeature => new("myExtension.enableFeature"
 [VisualStudioContribution]
 internal static Setting.String ApiEndpoint => new("myExtension.apiEndpoint", "%Settings.Endpoint%", MySettingsCategory, defaultValue: "https://api.example.com");
 
+// Integer (not Int64)
 [VisualStudioContribution]
-internal static Setting.Enum<LogLevel> LoggingLevel => new("myExtension.logLevel", "%Settings.LogLevel%", MySettingsCategory, defaultValue: LogLevel.Warning);
+internal static Setting.Integer MaxItems => new("myExtension.maxItems", "%Settings.MaxItems%", MySettingsCategory, defaultValue: 100);
+
+// Enum — non-generic, uses EnumSettingEntry list with string defaultValue
+[VisualStudioContribution]
+internal static Setting.Enum LoggingLevel => new("myExtension.logLevel", "%Settings.LogLevel%", MySettingsCategory, [
+    new EnumSettingEntry(nameof(LogLevel.Info), "%Settings.LogLevel.Info%"),
+    new EnumSettingEntry(nameof(LogLevel.Warning), "%Settings.LogLevel.Warning%"),
+    new EnumSettingEntry(nameof(LogLevel.Error), "%Settings.LogLevel.Error%"),
+], defaultValue: nameof(LogLevel.Warning));
 ```
 
-### Read and Write Settings
+**Available typed settings**: `Setting.Boolean`, `Setting.String`, `Setting.Integer`, `Setting.Enum`.
+**NOT available**: `Setting.Int64`, `Setting.Enum<T>` (generic form does not exist).
+
+### Read Settings
+
+Use `Extensibility.Settings().ReadEffectiveValueAsync()` — **not** `Setting.GetValueAsync()`:
 
 ```csharp
-// Read
-bool enabled = await EnableFeature.GetValueAsync(ct);
+// Read individual settings — returns SettingValue<T> with .ValueOrDefault()
+bool enabled = (await Extensibility.Settings()
+    .ReadEffectiveValueAsync(MySettings.EnableFeature, ct))
+    .ValueOrDefault(true);
 
-// Write (batch)
+long maxItems = (await Extensibility.Settings()
+    .ReadEffectiveValueAsync(MySettings.MaxItems, ct))
+    .ValueOrDefault(100);
+
+// Enum returns string value — parse explicitly
+string levelStr = (await Extensibility.Settings()
+    .ReadEffectiveValueAsync(MySettings.LoggingLevel, ct))
+    .ValueOrDefault(nameof(LogLevel.Warning));
+var level = Enum.TryParse<LogLevel>(levelStr, out var parsed)
+    ? parsed : LogLevel.Warning;
+```
+
+### Write Settings (batch)
+
+```csharp
 await Extensibility.Settings().WriteAsync(
     batch =>
     {

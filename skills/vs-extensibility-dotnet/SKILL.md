@@ -83,7 +83,7 @@ See [reference-editor.md](reference-editor.md) for tagger patterns, CodeLens, an
 - **Dialogs**: `Shell().ShowDialogAsync()` with `RemoteUserControl` content and `DialogOption`
 - **User Prompts**: `ShellExtensibility.ShowPromptAsync()` with `PromptOptions<T>` or `InputPromptOptions`
 - **File Pickers**: `ShowOpenFileDialogAsync()`, `ShowSaveAsFileDialogAsync()`, `ShowOpenFolderDialogAsync()`
-- **Output Window**: `Extensibility.Views().Output.GetChannelAsync()` with resource-based display names
+- **Output Window**: `Extensibility.Views().Output.CreateOutputChannelAsync()` — returns `OutputChannel`
 
 See [reference-ui.md](reference-ui.md) for tool window, dialog, and prompt patterns.
 
@@ -92,10 +92,22 @@ See [reference-ui.md](reference-ui.md) for tool window, dialog, and prompt patte
 - **Debug Visualizers**: `DebuggerVisualizerProvider` + `VisualizerObjectSource` (two-project architecture)
 - **Language Servers**: `LanguageServerProvider` returning `IDuplexPipe` from `CreateServerConnectionAsync()`
 - **Project Query**: `Workspaces().QueryProjectsAsync()` with fluent `.With()/.Where()` builder
-- **Settings**: `SettingCategory` + typed `Setting.Boolean`/`Setting.String`/`Setting.Enum`
+- **Settings**: `SettingCategory` + typed `Setting.Boolean`/`Setting.String`/`Setting.Integer`/`Setting.Enum`; read via `Extensibility.Settings().ReadEffectiveValueAsync()`
 - **Local services**: `InitializeServices()` + `IServiceCollection` for extension-scoped DI
 
 See [reference-advanced.md](reference-advanced.md) for visualizers, language servers, project query, and settings.
+
+## Common Pitfalls & Gotchas
+
+- **Preview API warnings**: Settings and Output Window require `#pragma warning disable VSEXTPREVIEW_SETTINGS` / `VSEXTPREVIEW_OUTPUTWINDOW` or `<NoWarn>` in csproj
+- **Setting types**: Use `Setting.Integer` (not `Setting.Int64`); `Setting.Enum` is non-generic with `EnumSettingEntry` list (not `Setting.Enum<T>`)
+- **Reading settings**: Use `Extensibility.Settings().ReadEffectiveValueAsync(setting, ct).ValueOrDefault()` — NOT `setting.GetValueAsync()`
+- **Output Window**: Returns `OutputChannel` via `CreateOutputChannelAsync()` — NOT `OutputWindow` via `GetChannelAsync()`
+- **TextPosition**: Has `Offset` property only (no `Line`/`Column`); use `.RpcContract.Line` and `.RpcContract.Column` for line/column numbers
+- **No Shell().OpenDocumentAsync()**: Use `Documents().OpenDocumentAsync()` or file pickers instead
+- **VisualStudio.LanguageServices**: Targets .NET Framework only; for out-of-proc net8.0 extensions needing Roslyn workspace access, use `Microsoft.CodeAnalysis.Workspaces.MSBuild` + `Microsoft.Build.Locator` instead
+- **MSBuild.Locator + Microsoft.Build.\***: All transitive `Microsoft.Build.*` packages must have `ExcludeAssets="runtime" PrivateAssets="all"` — the actual MSBuild assemblies are loaded at runtime from the local VS/MSBuild installation by MSBuildLocator
+- **Enum settings localization**: Enum entry display names must use `%Key%` resource references (not `nameof()`) to avoid CEE0027 localization warnings
 
 ## Legacy Interop & Migration
 

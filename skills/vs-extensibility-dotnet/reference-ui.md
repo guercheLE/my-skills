@@ -157,16 +157,25 @@ var folder = await Extensibility.Shell().ShowOpenFolderDialogAsync(
 
 ## Output Window
 
-```csharp
-OutputWindow? outputWindow = await Extensibility.Views().Output
-    .GetChannelAsync("MyChannel", "%OutputChannel.DisplayName%", ct);
+> **Preview API** — Requires `#pragma warning disable VSEXTPREVIEW_OUTPUTWINDOW` or `<NoWarn>$(NoWarn);VSEXTPREVIEW_OUTPUTWINDOW</NoWarn>` in csproj.
 
-if (outputWindow != null)
+```csharp
+#pragma warning disable VSEXTPREVIEW_OUTPUTWINDOW
+
+// Create in InitializeAsync or on first use (not per-command invocation)
+OutputChannel? outputChannel = await Extensibility.Views().Output
+    .CreateOutputChannelAsync("My Extension Output", ct);
+
+if (outputChannel != null)
 {
-    await outputWindow.Writer.WriteLineAsync("Hello from my extension!");
+    await outputChannel.Writer.WriteLineAsync("Hello from my extension!");
 }
+
+#pragma warning restore VSEXTPREVIEW_OUTPUTWINDOW
 ```
 
-- Channel display name uses `%Key%` resource referencing `.vsextension/string-resources.json`
+- Display name is a plain string (not `%Key%` resource reference)
+- Returns `OutputChannel` (not `OutputWindow`)
+- Use `CreateOutputChannelAsync()` (not `GetChannelAsync()`)
 - Writer supports `WriteAsync` and `WriteLineAsync`
-- Channels are lazily created on first access
+- Channels are lazily created on first access; best stored as a field initialized once
